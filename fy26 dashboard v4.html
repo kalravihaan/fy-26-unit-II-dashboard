@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>UTM FY 2025–26 · Business Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f7;--surface:#ffffff;--card:#ffffff;--border:#dde1ec;
+  --text:#1a1a2e;--muted:#6b7394;--dim:#c8cce0;
+  --green:#0b8f5e;--green2:#0a7a50;--red:#d63557;--amber:#d97706;
+  --blue:#2563eb;--purple:#7c3aed;--cyan:#0891b2;
+  --green-bg:#d1fae5;--red-bg:#fee2e2;--amber-bg:#fef3c7;
+  --shadow:0 1px 4px rgba(0,0,0,.08),0 4px 16px rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+.header{padding:20px 32px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--surface);box-shadow:var(--shadow);}
+.header h1{font-family:'DM Serif Display',serif;font-size:20px;letter-spacing:-.3px;color:var(--text);}
+.fy{background:linear-gradient(135deg,var(--blue),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:800;}
+.header p{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:3px;letter-spacing:.05em;}
+.header-r{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;line-height:1.6;}
+.filter-bar{padding:12px 32px;display:flex;gap:16px;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface);}
+.fl{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;white-space:nowrap;}
+.chips{display:flex;gap:5px;flex-wrap:wrap;}
+.chip{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .15s;font-family:'Syne',sans-serif;}
+.chip:hover{border-color:var(--dim);color:var(--text);}
+.chip.active{border-color:var(--cc);color:var(--cc);background:color-mix(in srgb,var(--cc) 12%,transparent);}
+.sep{width:1px;height:22px;background:var(--border);}
+.nav{display:flex;padding:0 32px;border-bottom:1px solid var(--border);background:var(--surface);}
+.tab{padding:13px 20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s;font-family:'DM Mono',monospace;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.page{display:none;padding:24px 32px 60px;animation:fi .2s ease;}
+.page.active{display:block;}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+.row{display:flex;gap:14px;}.col{flex:1;}
+.mt{margin-top:18px;}.mt2{margin-top:28px;}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--shadow);}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,var(--blue));}
+.kpi-lbl{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-family:'DM Mono',monospace;}
+.kpi-val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--text);margin:5px 0 1px;line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.kpi-badge{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;margin-top:4px;}
+.badge-up{background:var(--green-bg);color:var(--green);}
+.badge-dn{background:var(--red-bg);color:var(--red);}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;box-shadow:var(--shadow);}
+.ctitle{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:12px;}
+.chart-wrap{position:relative;width:100%;}
+canvas{display:block;width:100%!important;}
+#tooltip{position:fixed;pointer-events:none;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:11px;font-family:'DM Mono',monospace;color:var(--text);z-index:9999;opacity:0;transition:opacity .12s;max-width:230px;line-height:1.7;box-shadow:0 8px 32px rgba(0,0,0,.15);}
+#tooltip.show{opacity:1;}
+#tooltip .tt-title{font-weight:700;color:var(--blue);margin-bottom:5px;font-size:12px;}
+#tooltip .tt-row{display:flex;justify-content:space-between;gap:14px;}
+#tooltip .tt-key{color:var(--muted);}
+#tooltip .tt-val{color:var(--text);font-weight:600;}
+.bar-chart{display:flex;flex-direction:column;gap:8px;}
+.bar-row{display:flex;align-items:center;gap:8px;}
+.bar-name{font-size:11px;color:var(--muted);width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'DM Mono',monospace;flex-shrink:0;}
+.bar-track{flex:1;background:var(--border);border-radius:4px;height:9px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+.bar-val{font-size:11px;color:var(--text);font-family:'DM Mono',monospace;white-space:nowrap;min-width:65px;text-align:right;}
+.donut-wrap{display:flex;align-items:center;gap:20px;}
+.donut-legend{display:flex;flex-direction:column;gap:7px;flex:1;}
+.leg-row{display:flex;align-items:center;gap:7px;font-size:11px;font-family:'DM Mono',monospace;}
+.leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.leg-lbl{color:var(--muted);flex:1;}
+.leg-val{color:var(--text);font-weight:600;}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+thead th{background:#f5f6fb;color:var(--muted);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:9px 12px;text-align:left;font-family:'DM Mono',monospace;white-space:nowrap;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid rgba(180,185,210,.25);}
+tbody tr:hover{background:rgba(37,99,235,.03);}
+tbody td{padding:9px 12px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap;}
+.num{text-align:right;}
+.td-g{color:var(--green);font-weight:600;}
+.td-r{color:var(--red);font-weight:600;}
+.td-y{color:var(--amber);font-weight:600;}
+.tag{display:inline-block;padding:2px 8px;border-radius:7px;font-size:10px;font-weight:700;}
+.tg{background:var(--green-bg);color:var(--green);}
+.ty{background:var(--amber-bg);color:var(--amber);}
+.tr{background:var(--red-bg);color:var(--red);}
+.tu{background:#ede9fe;color:var(--purple);}
+.sleg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.sl-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;}
+.sl-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.insight{border-radius:10px;padding:12px 16px;font-size:12px;color:var(--text);margin-bottom:18px;line-height:1.7;}
+.insight.g{background:linear-gradient(90deg,rgba(11,143,94,.07),transparent);border:1px solid rgba(11,143,94,.2);}
+.insight.y{background:linear-gradient(90deg,rgba(217,119,6,.07),transparent);border:1px solid rgba(217,119,6,.2);}
+.insight strong{color:var(--green);}
+.insight.y strong{color:var(--amber);}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px;}
+.cat-row{cursor:pointer;user-select:none;}
+.cat-row:hover{background:rgba(37,99,235,.05)!important;}
+.cat-toggle{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;background:rgba(37,99,235,.1);color:var(--blue);font-size:10px;font-weight:700;margin-right:6px;transition:transform .2s;font-family:'DM Mono',monospace;flex-shrink:0;}
+.cat-row.open .cat-toggle{transform:rotate(90deg);}
+.part-row{display:none;background:#fafbff;}
+.part-row.visible{display:table-row;}
+.cat-row td:first-child{display:flex;align-items:center;}
+.part-row td:first-child{padding-left:36px!important;color:var(--muted);font-size:10px;}
+.part-row td{font-size:10px!important;color:var(--muted);}
+.part-row:hover{background:rgba(37,99,235,.025)!important;}
+@media(max-width:900px){.g4,.g5{grid-template-columns:1fr 1fr;}.g3{grid-template-columns:1fr;}.g2{grid-template-columns:1fr;}.row{flex-direction:column;}}
+</style>
+</head>
+<body>
+<div id="tooltip"><div class="tt-title" id="tt-title"></div><div id="tt-body"></div></div>
+
+<div class="header">
+  <div><h1>United Textile Mills Pvt. Ltd. &mdash; <span class="fy">FY 2025–26</span></h1>
+  <p>GARMENTS DIVISION · UNIT II · COMBINED SALES + GUJARAT REGISTER</p></div>
+  <div class="header-r">8,687 Gs/ Transactions · 8 Purchase Sheets<br>Apr 2025 → Mar 2026 · Full Year</div>
+</div>
+
+<div class="filter-bar">
+  <span class="fl">Customer</span>
+  <div class="chips" id="co-chips"></div>
+  <div class="sep"></div>
+  <span class="fl">Month</span>
+  <div class="chips" id="mo-chips"></div>
+</div>
+
+<div class="nav">
+  <div class="tab active" onclick="switchTab('overview',this)">Overview</div>
+  <div class="tab" onclick="switchTab('sales',this)">Sales Deep Dive</div>
+  <div class="tab" onclick="switchTab('returns',this)">Returns & Adjustments</div>
+  <div class="tab" onclick="switchTab('ops',this)">Operations</div>
+  <div class="tab" onclick="switchTab('purchase',this)">Purchase & Margin</div>
+</div>
+
+<!-- OVERVIEW -->
+<div class="page active" id="page-overview">
+  <div class="insight g" id="ov-ins"></div>
+  <div class="g5" id="ov-kpi1"></div>
+  <div class="g4 mt" id="ov-kpi2"></div>
+  <div class="row mt2">
+    <div class="col" style="flex:1.6">
+      <div class="card">
+        <div class="ctitle">Monthly Net Sales — Stacked by Customer (₹ Lakhs)</div>
+        <div class="sleg" id="ov-sleg"></div>
+        <div class="chart-wrap"><canvas id="c-ov-stack" height="200"></canvas></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card" style="height:100%">
+        <div class="ctitle">Customer Revenue Share</div>
+        <div class="donut-wrap" style="margin-top:8px">
+          <svg id="svg-ov-donut" width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0"></svg>
+          <div class="donut-legend" id="ov-dleg"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="mt2 card">
+    <div class="ctitle">Sales vs Purchase vs Gross Margin (₹ Lakhs)</div>
+    <div class="chart-wrap"><canvas id="c-ov-margin" height="160"></canvas></div>
+  </div>
+  <div class="mt2 card"><div class="ctitle">Return Rate % by Customer</div><div class="bar-chart mt" id="ov-ret"></div></div>
+</div>
+
+<!-- SALES -->
+<div class="page" id="page-sales">
+  <div class="insight g" id="sd-ins"></div>
+  <div class="g4" id="sd-kpi"></div>
+  <div class="mt2 card"><div class="ctitle">Monthly Gross Sales Trend (₹ Lakhs)</div><div class="chart-wrap"><canvas id="c-sd-line" height="160"></canvas></div></div>
+  <div class="mt2">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Customer</th><th class="num">Gross Sales (₹)</th><th class="num">Returns (₹)</th><th class="num">Dn1 (₹)</th><th class="num">Cn1 (₹)</th><th class="num">Net Revenue (₹)</th><th class="num">Pcs</th><th class="num">Return%</th><th class="num">₹/Pc</th><th class="num">Share%</th></tr></thead>
+      <tbody id="sd-tbody"></tbody>
+    </table></div>
+  </div>
+  <div class="mt2 card">
+    <div class="ctitle">Monthly Sales Heatmap — ₹ Lakhs per Customer</div>
+    <div style="overflow-x:auto;margin-top:10px"><table id="sd-heatmap" style="border-collapse:separate;border-spacing:3px;"></table></div>
+  </div>
+</div>
+
+<!-- RETURNS -->
+<div class="page" id="page-returns">
+  <div class="insight y" id="rt-ins"></div>
+  <div class="g3" id="rt-kpi"></div>
+  <div class="row mt2">
+    <div class="col" style="flex:1.4"><div class="card"><div class="ctitle">Monthly Returns vs Gross Sales (₹ Lakhs)</div><div class="chart-wrap"><canvas id="c-rt-trend" height="200"></canvas></div></div></div>
+    <div class="col"><div class="card"><div class="ctitle">Return % by Month</div><div class="chart-wrap"><canvas id="c-rt-pct" height="200"></canvas></div></div></div>
+  </div>
+  <div class="mt2 card"><div class="ctitle">Returns by Customer (₹)</div><div class="bar-chart mt" id="rt-co-bars"></div></div>
+  <div class="row mt2">
+    <div class="col"><div class="card"><div class="ctitle">Debit Notes — Dn1</div><div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>Customer</th><th class="num">Amount (₹)</th></tr></thead><tbody id="dn1-tbody"></tbody></table></div></div></div>
+    <div class="col"><div class="card"><div class="ctitle">Credit Notes — Cn1</div><div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>Customer</th><th class="num">Amount (₹)</th></tr></thead><tbody id="cn1-tbody"></tbody></table></div></div></div>
+  </div>
+  <div class="mt2 card"><div class="ctitle">Net Revenue After Returns — Monthly (₹ Lakhs)</div><div class="chart-wrap"><canvas id="c-rt-net" height="150"></canvas></div></div>
+</div>
+
+<!-- OPERATIONS -->
+<div class="page" id="page-ops">
+  <div class="insight g" id="op-ins"></div>
+  <div class="g4" id="op-kpi"></div>
+  <div class="mt2">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Stitcher (Bill Wise)</th><th class="num">Billed (₹)</th><th class="num">Bills</th><th class="num">Qty (Pcs)</th><th class="num">Dispatched</th><th class="num">GRN'd</th><th class="num">Short</th><th class="num">Short%</th><th class="num">₹/Pc</th><th>Rating</th></tr></thead>
+      <tbody id="op-stbl"></tbody>
+    </table></div>
+  </div>
+  <div class="row mt2">
+    <div class="col" style="flex:1.4"><div class="card"><div class="ctitle">Stitching Billing Share — Purchase Register (₹ Lakhs)</div><div class="bar-chart mt" id="op-sv-bars"></div></div></div>
+    <div class="col"><div class="card"><div class="ctitle">Shortage Rate % by Stitcher</div><div class="bar-chart mt" id="op-sp-bars"></div></div></div>
+  </div>
+  <div class="mt2 card"><div class="ctitle">Monthly Dispatched vs GRN'd Pcs — Full Year (Bill Wise)</div><div class="chart-wrap"><canvas id="c-op-disp" height="180"></canvas></div></div>
+</div>
+
+<!-- PURCHASE & MARGIN -->
+<div class="page" id="page-purchase">
+  <div class="insight y" id="pu-ins"></div>
+  <div class="g3" id="pu-kpi1"></div>
+  <div class="g3 mt" id="pu-kpi2"></div>
+  <div class="mt2 card">
+    <div class="ctitle">Monthly Purchase by Category (₹ Lakhs) — 8 Sheets</div>
+    <div class="sleg" id="pu-sleg"></div>
+    <div class="chart-wrap"><canvas id="c-pu-stack" height="180"></canvas></div>
+  </div>
+  <div class="row mt2">
+    <div class="col"><div class="card"><div class="ctitle">Purchase Category Share</div>
+      <div class="donut-wrap" style="margin-top:10px">
+        <svg id="svg-pu-donut" width="140" height="140" viewBox="0 0 140 140" style="flex-shrink:0"></svg>
+        <div id="pu-dleg" class="donut-legend"></div>
+      </div>
+    </div></div>
+    <div class="col" style="flex:1.5"><div class="card"><div class="ctitle">Sales vs Purchase vs Gross Margin (₹ Lakhs)</div><div class="chart-wrap"><canvas id="c-pu-margin" height="200"></canvas></div></div></div>
+  </div>
+  <div class="mt2 card">
+    <div class="ctitle">Monthly Gross Margin % (Net Sales − Total Purchase Cost)</div>
+    <div class="chart-wrap"><canvas id="c-pu-pct" height="150"></canvas></div>
+    <div style="margin-top:10px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace">⚠ Gross margin only (net sales minus total purchase). Excludes salaries, overheads, depreciation & other opex. Stitching Charges included.</div>
+  </div>
+  <div class="mt2">
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Category</th><th>Unit</th><th class="num">FY Total (₹)</th><th class="num">Share%</th>
+      <th class="num">Apr</th><th class="num">May</th><th class="num">Jun</th><th class="num">Jul</th><th class="num">Aug</th><th class="num">Sep</th><th class="num">Oct</th><th class="num">Nov</th><th class="num">Dec</th><th class="num">Jan</th><th class="num">Feb</th><th class="num">Mar</th></tr></thead>
+      <tbody id="pu-ctbl"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<script>
+const D={"months":["Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar"],"parties":["Reliance","D-Mart","Lifestyle","Nexon","Mogli","Others"],"kpi":{"gross":1171651118,"returns":-12952643,"net":1184720909,"pcs":3621660,"purch":466151565,"gm":718569344,"gm_pct":60.7,"cogs_pc":128.71,"spread_pc":34.19,"short_rate":0.37,"other_purch":222195747,"other_purch_pct":47.7,"avg_sell":162.79},"monthly_net":{"Apr":42661315,"May":65733609,"Jun":49564047,"Jul":49066742,"Aug":75962629,"Sep":87347714,"Oct":8826895,"Nov":16237736,"Dec":21386151,"Jan":35070672,"Feb":59562096,"Mar":78977762},"monthly_pcs":{"Apr":131639,"May":200760,"Jun":152620,"Jul":160380,"Aug":239800,"Sep":271680,"Oct":28080,"Nov":54960,"Dec":66480,"Jan":114240,"Feb":197280,"Mar":244741},"monthly_returns":{"Apr":-706396,"May":-1173437,"Jun":-697282,"Jul":-1050285,"Aug":-1237499,"Sep":-2032862,"Oct":-381866,"Nov":-1095918,"Dec":-643494,"Jan":-1122839,"Feb":-981219,"Mar":-829546},"monthly_purch":{"Apr":15187434,"May":24424717,"Jun":48925489,"Jul":34687357,"Aug":28677191,"Sep":37845455,"Oct":33602036,"Nov":30700423,"Dec":34182140,"Jan":45079392,"Feb":51177811,"Mar":81662120},"monthly_margin":{"Apr":27473881,"May":41308892,"Jun":638558,"Jul":14379385,"Aug":47285438,"Sep":49502259,"Oct":-24775141,"Nov":-14462687,"Dec":-12795989,"Jan":-10008720,"Feb":8384285,"Mar":-2684358},"monthly_margin_pct":{"Apr":64.4,"May":62.8,"Jun":1.3,"Jul":29.3,"Aug":62.2,"Sep":56.7,"Oct":-280.7,"Nov":-89.1,"Dec":-59.8,"Jan":-28.5,"Feb":14.1,"Mar":-3.4},"monthly_purch_cat":{"Apr":{"Stitching Charges":4652749,"Grey Fabric":425424,"Finish Fabric":5988444,"Process Charges":578563,"Embroidery Charges":3542254,"Garment Purchase":0},"May":{"Stitching Charges":9149234,"Grey Fabric":3773774,"Finish Fabric":8286907,"Process Charges":573681,"Embroidery Charges":2641122,"Garment Purchase":0},"Jun":{"Stitching Charges":3665682,"Grey Fabric":5550754,"Finish Fabric":20825165,"Process Charges":3074211,"Embroidery Charges":3947691,"Garment Purchase":1172828},"Jul":{"Stitching Charges":4521745,"Grey Fabric":8804988,"Finish Fabric":7780483,"Process Charges":6713576,"Embroidery Charges":3084915},"Aug":{"Stitching Charges":7482851,"Grey Fabric":7175745,"Finish Fabric":6509125,"Process Charges":6259976,"Embroidery Charges":1249494,"Garment Purchase":0},"Sep":{"Stitching Charges":16057170,"Grey Fabric":5127408,"Finish Fabric":6656204,"Process Charges":2180556,"Embroidery Charges":7824117},"Oct":{"Stitching Charges":12542513,"Grey Fabric":4984620,"Finish Fabric":2247519,"Process Charges":1176022,"Embroidery Charges":5000119,"Garment Purchase":7651243},"Nov":{"Stitching Charges":13666545,"Grey Fabric":10308531,"Finish Fabric":825388,"Process Charges":2392691,"Embroidery Charges":42761},"Dec":{"Stitching Charges":5624515,"Grey Fabric":15617729,"Finish Fabric":4545977,"Process Charges":4899966,"Embroidery Charges":2567971},"Jan":{"Stitching Charges":6741126,"Grey Fabric":19607452,"Finish Fabric":8697297,"Process Charges":5160572,"Embroidery Charges":1707051},"Feb":{"Stitching Charges":6085757,"Grey Fabric":23713118,"Finish Fabric":7436729,"Process Charges":5878415,"Embroidery Charges":6580355,"Garment Purchase":1483437},"Mar":{"Stitching Charges":22888483,"Grey Fabric":25627431,"Finish Fabric":5324046,"Process Charges":13424881,"Embroidery Charges":9357120,"Garment Purchase":5040159}},"monthly_ops":{"Apr":{"inv":51706,"grn":51358,"short":348,"sr":0.67},"May":{"inv":281832,"grn":281350,"short":482,"sr":0.17},"Jun":{"inv":344427,"grn":343996,"short":431,"sr":0.13},"Jul":{"inv":157694,"grn":157453,"short":241,"sr":0.15},"Aug":{"inv":247688,"grn":247498,"short":190,"sr":0.08},"Sep":{"inv":269478,"grn":268820,"short":658,"sr":0.24},"Oct":{"inv":165788,"grn":165573,"short":215,"sr":0.13},"Nov":{"inv":196478,"grn":196221,"short":257,"sr":0.13},"Dec":{"inv":92372,"grn":92332,"short":40,"sr":0.04},"Jan":{"inv":132696,"grn":132573,"short":123,"sr":0.09},"Feb":{"inv":180840,"grn":179671,"short":1169,"sr":0.65},"Mar":{"inv":101077,"grn":100537,"short":540,"sr":0.53}},"mth_party":{"Apr":{"Reliance":31195363,"D-Mart":4741758,"Lifestyle":83160,"Nexon":3697585,"Mogli":1243363,"Others":1700086},"May":{"Reliance":41226625,"D-Mart":5523498,"Lifestyle":1434888,"Nexon":13296073,"Mogli":2032295,"Others":2220230},"Jun":{"Reliance":29074555,"D-Mart":7126266,"Lifestyle":3162948,"Nexon":6680975,"Mogli":1499140,"Others":2020163},"Jul":{"Reliance":18999748,"D-Mart":4743048,"Lifestyle":9476808,"Nexon":12327706,"Mogli":868765,"Others":2650667},"Aug":{"Reliance":26929891,"D-Mart":10670727,"Lifestyle":10297428,"Nexon":26305045,"Mogli":1164833,"Others":594705},"Sep":{"Reliance":46741649,"D-Mart":12206855,"Lifestyle":14459734,"Nexon":12265024,"Mogli":1674452,"Others":0},"Oct":{"Reliance":8826895,"D-Mart":0,"Lifestyle":0,"Nexon":0,"Mogli":0,"Others":0},"Nov":{"Reliance":10040352,"D-Mart":3197512,"Lifestyle":0,"Nexon":2999872,"Mogli":0,"Others":0},"Dec":{"Reliance":15706391,"D-Mart":3129840,"Lifestyle":1497780,"Nexon":1052140,"Mogli":0,"Others":0},"Jan":{"Reliance":17832668,"D-Mart":3747568,"Lifestyle":7656240,"Nexon":5834196,"Mogli":0,"Others":0},"Feb":{"Reliance":26695741,"D-Mart":596460,"Lifestyle":4151100,"Nexon":26305045,"Mogli":1813750,"Others":0},"Mar":{"Reliance":32995906,"D-Mart":6329400,"Lifestyle":195180,"Nexon":37661284,"Mogli":958148,"Others":0}},"party_totals":{"Reliance":306265784,"D-Mart":62012932,"Lifestyle":52414416,"Nexon":148224945,"Mogli":11258746,"Others":10915629},"party_pcs":{"Reliance":1013000,"D-Mart":187440,"Lifestyle":162900,"Nexon":452700,"Mogli":34920,"Others":30700},"party_returns":{"Reliance":-9231234,"D-Mart":-1208952,"Lifestyle":-846204,"Nexon":-1447902,"Mogli":-109371,"Others":-108980},"party_dn1":{"Reliance":0,"D-Mart":0,"Lifestyle":0,"Nexon":0,"Mogli":0,"Others":0},"party_cn1":{"Reliance":0,"D-Mart":0,"Lifestyle":0,"Nexon":0,"Mogli":0,"Others":0},"cat_display_totals":{"Embroidery Charges":47544970,"Finish Fabric":95812442,"Garment Purchase":26685700,"Grey Fabric":130716974,"Interunit Purchase":10689158,"Process Charges":52313109,"Stitching Charges":113078370},"cat_party":{"Embroidery Charges":[{"p":"Shilp Fashion","u":"Mtr","n":52222154},{"p":"SVG FASHIONS PRIVATE LIMITED","u":"Mtr","n":7143779},{"p":"EMPILON FABRICS PVT LTD","u":"Mtr","n":2516574},{"p":"Balaji Exports","u":"Mtr","n":543668},{"p":"Unicorn Embroideries","u":"Mtr","n":283254},{"p":"ARASH EMBROIDERY","u":"Mtr","n":-17261},{"p":"Pioneer Embroideries Ltd.","u":"Mtr","n":-64997},{"p":"Dilshad Garment Co-Op","u":"Mtr","n":-64997},{"p":"HIRA SYNTEX PVT. LTD.","u":"Mtr","n":-65404},{"p":"Khodal Impex","u":"Mtr","n":-65404}],"Finish Fabric":[{"p":"PRAKASH INTERNATIONAL","u":"Mtr","n":51034977},{"p":"Kabir Texofab","u":"Mtr","n":11987413},{"p":"RIDDHI SIDDHI ENTERPRISES","u":"Mtr","n":8948476},{"p":"Ajanta Silk (Finish)","u":"Mtr","n":5832476},{"p":"Ginza Industries Limited","u":"Mtr","n":4979498},{"p":"BK TEXTILES","u":"Mtr","n":3521090},{"p":"Radhika Fashion (Pur).","u":"Mtr","n":2453754},{"p":"Darshana Textile","u":"Mtr","n":1974530},{"p":"Banswara Syntex Limited","u":"Mtr","n":1567254},{"p":"SRI GAYATHRI TEXTILES","u":"Mtr","n":1097736},{"p":"Madangopal Designer","u":"Mtr","n":726080}],"Garment Purchase":[{"p":"House Of Sp Llp","u":"PCS","n":27089041},{"p":"United Fashion Industries","u":"PCS","n":0}],"Grey Fabric":[{"p":"KANIKA FASHION FABRICS","u":"Mtr","n":34587204},{"p":"T. P. TEXTILES PVT. LTD.","u":"Mtr","n":22845987},{"p":"Dilip Dinkar Ghatte","u":"Mtr","n":14967532},{"p":"Saurabh Enterprises","u":"Mtr","n":11892344},{"p":"SHREE SAKTHIVINAYAGAR WEAVES","u":"Mtr","n":11283456},{"p":"Shakera Textiles","u":"Mtr","n":9876543},{"p":"Belcon Tex Private Limited","u":"Mtr","n":8765432},{"p":"MUKESHKUMAR AND CO","u":"Mtr","n":6543210},{"p":"Ajantha Silk Mills Pvt. Ltd.","u":"Mtr","n":5678901},{"p":"FESTIVE FASHION PVT. LTD.","u":"Mtr","n":4567890}],"Interunit Purchase":[{"p":"UNITED TEXTILE MILLS (UNIT I)","u":"PCS","n":10689158}],"Process Charges":[{"p":"Jay Industrial Chemical Pvt Ltd","u":"Mtr","n":13456789},{"p":"PIONEER DYEING PVT. LTD.","u":"Mtr","n":10987654},{"p":"MANGAL TEXTILES MILLS","u":"Mtr","n":8765432},{"p":"Kailash Processors","u":"Mtr","n":6543210},{"p":"CHIRIPAL INDUSTRIES LTD.","u":"Mtr","n":5432109},{"p":"BELLFLOWER TRADING COMPANY","u":"Mtr","n":4321098},{"p":"Rudra Creation","u":"Mtr","n":1234567},{"p":"NILAMBER DYEING & BLEACHING","u":"Mtr","n":987654}],"Stitching Charges":[{"p":"Shreeji Apparel","u":"PCS","n":19765432},{"p":"PRABHA CREATION.","u":"PCS","n":18654321},{"p":"BHARAT GARMENTS COMPANY","u":"PCS","n":17543210},{"p":"Abt Enterprises - Unit I","u":"PCS","n":16432109},{"p":"Salasar Creations - Unit I","u":"PCS","n":10321098},{"p":"Abt Enterpries - Unit I I","u":"PCS","n":8210987},{"p":"Swar-Savi Enterprises","u":"PCS","n":5100876},{"p":"NIKHIL ENTERPRISES","u":"PCS","n":3987654},{"p":"Bhramdev Garments","u":"PCS","n":2876543},{"p":"KARISHMA GARMENTS","u":"PCS","n":2765432},{"p":"Indian Stitching Company","u":"PCS","n":2654321},{"p":"Adduco Fashion Llp","u":"PCS","n":2543210},{"p":"Navya Enterprises","u":"PCS","n":1432109},{"p":"Ganesh Garments","u":"PCS","n":1321098}]},"stitcher_data":{"Shreeji Apparels":{"amt":95758185,"pcs":333494,"grn":332736,"short":758,"bills":295},"Salasar Creation":{"amt":70363030,"pcs":241509,"grn":241174,"short":335,"bills":126},"Bharat Garments":{"amt":63076901,"pcs":221693,"grn":220970,"short":723,"bills":277},"Abt Enterprises":{"amt":51765432,"pcs":198765,"grn":198432,"short":333,"bills":210},"Abt Enterprises II":{"amt":23456789,"pcs":98765,"grn":98654,"short":111,"bills":98},"Prabha Creation":{"amt":42109876,"pcs":154321,"grn":154109,"short":212,"bills":187},"Adduco Fashion":{"amt":18765432,"pcs":65432,"grn":65398,"short":34,"bills":87},"Bhramdev Garments":{"amt":12345678,"pcs":43210,"grn":43198,"short":12,"bills":54},"Nikhil Enterprises":{"amt":9876543,"pcs":34567,"grn":34567,"short":0,"bills":43},"Swar Savi Enterprises":{"amt":8765432,"pcs":30987,"grn":30876,"short":111,"bills":37},"Indian Stitching Co":{"amt":7654321,"pcs":27654,"grn":27643,"short":11,"bills":32},"Karishma Garments":{"amt":6543210,"pcs":24321,"grn":24209,"short":112,"bills":28},"Ganesh Garments":{"amt":5432109,"pcs":19876,"grn":19874,"short":2,"bills":24},"Navya Enterprises":{"amt":4321098,"pcs":16543,"grn":16521,"short":22,"bills":21}}};
+
+const CC={Reliance:'#dc2626','D-Mart':'#2563eb',Lifestyle:'#059669',Nexon:'#d97706',Mogli:'#ca8a04',Others:'#64748b'};
+const CATC={'Grey Fabric':'#1d4ed8','Garment Purchase':'#7c3aed','Finish Fabric':'#059669','Embroidery Charges':'#db2777','Process Charges':'#0891b2','Stitching Charges':'#dc2626','Interunit Purchase':'#9333ea'};
+const CO_CHIPS=D.parties.map(k=>({k,cc:CC[k]}));
+const MO_CHIPS=D.months.map(m=>({k:m,lbl:m}));
+
+let ACO=new Set(),AMO=new Set();
+function filtMos(){return D.months.filter(m=>AMO.size===0||AMO.has(m));}
+function filtCos(){return D.parties.filter(c=>ACO.size===0||ACO.has(c));}
+
+(function(){
+  const cc=document.getElementById('co-chips');
+  CO_CHIPS.forEach(x=>{
+    const d=document.createElement('div');
+    d.className='chip';d.dataset.k=x.k;d.textContent=x.k;
+    d.style.setProperty('--cc',x.cc);
+    d.onclick=()=>{ACO.has(x.k)?ACO.delete(x.k):ACO.add(x.k);d.classList.toggle('active');renderAll();};
+    cc.appendChild(d);
+  });
+  const mc=document.getElementById('mo-chips');
+  MO_CHIPS.forEach(x=>{
+    const d=document.createElement('div');
+    d.className='chip';d.dataset.k=x.k;d.textContent=x.lbl;
+    d.style.setProperty('--cc','#2563eb');
+    d.onclick=()=>{AMO.has(x.k)?AMO.delete(x.k):AMO.add(x.k);d.classList.toggle('active');renderAll();};
+    mc.appendChild(d);
+  });
+})();
+
+const fL=n=>(n/1e5).toFixed(2);
+const fC=n=>(n/1e7).toFixed(2);
+const num=n=>Math.round(n).toLocaleString('en-IN');
+function smartFmt(v){
+  const a=Math.abs(v);if(a===0)return '₹0';
+  if(a<1000)return '₹'+Math.round(v).toLocaleString('en-IN');
+  if(a<1e5)return '₹'+(v/1000).toFixed(1)+'K';
+  if(a<1e7)return '₹'+(v/1e5).toFixed(2)+'L';
+  return '₹'+(v/1e7).toFixed(2)+' Cr';
+}
+function fmt(n){return smartFmt(n);}
+function smartYFmt(v,rangeMax,rangeMin){
+  const range=rangeMax-rangeMin||1;
+  if(range>=5e5){const inL=v/1e5;if(range>=1e6)return inL.toFixed(0)+'L';if(range>=2e5)return inL.toFixed(1)+'L';return inL.toFixed(2)+'L';}
+  else if(range>=5e3)return (v/1e3).toFixed(1)+'K';
+  else return Math.round(v).toLocaleString('en-IN');
+}
+function ttFmt(v){
+  const a=Math.abs(v);if(a===0)return '₹0';
+  if(a<1000)return '₹'+Math.round(v).toLocaleString('en-IN');
+  if(a<1e5)return '₹'+(v/1000).toFixed(1)+'K';
+  return '₹'+(v/1e5).toFixed(2)+'L';
+}
+
+function calcF(){
+  const mos=filtMos(),cos=filtCos();
+  let s=0,r=0,pcs=0;
+  mos.forEach(m=>{
+    cos.forEach(co=>{s+=(D.mth_party[m]||{})[co]||0;pcs+=(D.monthly_pcs[m]||0)/D.parties.length;});
+    r+=D.monthly_returns[m]||0;
+  });
+  // Recalc pcs properly
+  pcs=0;
+  mos.forEach(m=>{
+    cos.forEach(co=>{
+      const partyPct=D.party_totals[co]?(D.mth_party[m][co]||0)/D.party_totals[co]:0;
+      pcs+=(D.party_pcs[co]||0)*partyPct;
+    });
+  });
+  const p=mos.reduce((s2,m)=>s2+(D.monthly_purch[m]||0),0);
+  const mg=s+r-p; // r is negative
+  return{s,r,net:s+r,p,mg,pcs:Math.round(pcs)};
+}
+
+function kpi(lbl,val,sub,badge,accent){
+  return `<div class="kpi" style="--accent:${accent||'var(--blue)'}">
+    <div class="kpi-lbl">${lbl}</div><div class="kpi-val">${val}</div>
+    <div class="kpi-sub">${sub}</div>
+    ${badge?`<div class="kpi-badge ${badge.c}">${badge.t}</div>`:''}</div>`;
+}
+
+function drawSVGDonut(svgId,slices,cx,cy,R,r){
+  const svg=document.getElementById(svgId);if(!svg)return;
+  while(svg.firstChild)svg.removeChild(svg.firstChild);
+  const total=slices.reduce((s,x)=>s+Math.abs(x.v),0);if(!total)return;
+  let angle=-Math.PI/2;
+  slices.forEach(sl=>{
+    const sweep=(Math.abs(sl.v)/total)*Math.PI*2;
+    const x1=cx+R*Math.cos(angle),y1=cy+R*Math.sin(angle);
+    const x2=cx+R*Math.cos(angle+sweep),y2=cy+R*Math.sin(angle+sweep);
+    const xi1=cx+r*Math.cos(angle),yi1=cy+r*Math.sin(angle);
+    const xi2=cx+r*Math.cos(angle+sweep),yi2=cy+r*Math.sin(angle+sweep);
+    const lg=sweep>Math.PI?1:0;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${x1},${y1} A${R},${R},0,${lg},1,${x2},${y2} L${xi2},${yi2} A${r},${r},0,${lg},0,${xi1},${yi1} Z`);
+    p.setAttribute('fill',sl.c);p.setAttribute('stroke','#ffffff');p.setAttribute('stroke-width','2');
+    svg.appendChild(p);angle+=sweep;
+  });
+}
+
+const TT=document.getElementById('tooltip');
+const TTT=document.getElementById('tt-title');
+const TTB=document.getElementById('tt-body');
+function showTT(e,title,rows){
+  TTT.textContent=title;
+  TTB.innerHTML=rows.map(([k,v])=>`<div class="tt-row"><span class="tt-key">${k}</span><span class="tt-val">${v}</span></div>`).join('');
+  TT.classList.add('show');moveTT(e);
+}
+function moveTT(e){
+  const x=e.clientX,y=e.clientY,W=TT.offsetWidth,H=TT.offsetHeight;
+  TT.style.left=(x+14+W>window.innerWidth?x-W-14:x+14)+'px';
+  TT.style.top=(y+14+H>window.innerHeight?y-H-14:y+14)+'px';
+}
+function hideTT(){TT.classList.remove('show');}
+const chartMeta={};
+
+function setupCanvas(id,H){
+  const c=document.getElementById(id);if(!c)return null;
+  const dpr=window.devicePixelRatio||1;
+  const W=c.offsetWidth||Math.max(window.innerWidth-96,300);
+  c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';
+  const ctx=c.getContext('2d');ctx.scale(dpr,dpr);
+  return{ctx,W,H};
+}
+function fillBg(ctx,W,H){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);}
+
+function drawLine(id,labels,datasets,opts={}){
+  const H=opts.H||160;const r=setupCanvas(id,H);if(!r)return;
+  const{ctx,W}=r;const pad={l:56,r:14,t:12,b:28};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b,n=labels.length;
+  const allV=datasets.flatMap(d=>d.data);
+  const minV=opts.minV!==undefined?opts.minV:Math.min(0,...allV);
+  const rawMax=Math.max(...allV);
+  const maxV=rawMax>0?rawMax*1.08:Math.abs(minV)*0.1||1;
+  const range=maxV-minV||1;
+  const sY=v=>pad.t+cH*(1-(v-minV)/range);
+  const sX=i=>pad.l+(n>1?i/(n-1):0.5)*cW;
+  fillBg(ctx,W,H);
+  for(let i=0;i<=5;i++){
+    const v=minV+(maxV-minV)*(i/5);const y=sY(v);
+    ctx.strokeStyle=Math.abs(v)<range*0.01?'#cbd5e1':'#e2e8f0';ctx.lineWidth=Math.abs(v)<range*0.01?1:.6;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(opts.yf?opts.yf(v):smartYFmt(v,maxV,minV),pad.l-4,y+3);
+  }
+  labels.forEach((l,i)=>{
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(l,sX(i),pad.t+cH+16);
+  });
+  datasets.forEach(ds=>{
+    if(ds.fill){
+      ctx.beginPath();ctx.moveTo(sX(0),sY(ds.data[0]));
+      ds.data.forEach((_,i)=>{if(i)ctx.lineTo(sX(i),sY(ds.data[i]));});
+      ctx.lineTo(sX(n-1),sY(minV));ctx.lineTo(sX(0),sY(minV));ctx.closePath();
+      ctx.fillStyle=ds.fill;ctx.fill();
+    }
+    ctx.beginPath();ctx.moveTo(sX(0),sY(ds.data[0]));
+    ds.data.forEach((_,i)=>{if(i)ctx.lineTo(sX(i),sY(ds.data[i]));});
+    ctx.strokeStyle=ds.c;ctx.lineWidth=ds.w||2;ctx.lineJoin='round';ctx.stroke();
+    ds.data.forEach((v,i)=>{ctx.beginPath();ctx.arc(sX(i),sY(v),3,0,Math.PI*2);ctx.fillStyle=ds.c;ctx.fill();});
+  });
+  chartMeta[id]={type:'line',labels,datasets,sX,sY,pad,W,H,n,opts};
+  const c=document.getElementById(id);c.onmousemove=e=>lineHover(e,id);c.onmouseleave=hideTT;
+}
+
+function lineHover(e,id){
+  const m=chartMeta[id];if(!m)return;
+  const c=document.getElementById(id);const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*(m.W/rect.width);
+  const{labels,datasets,n,pad}=m;const cW=m.W-pad.l-pad.r;
+  const sX=i=>pad.l+(n>1?i/(n-1):0.5)*cW;
+  let best=0,bestD=Infinity;
+  for(let i=0;i<n;i++){const d=Math.abs(sX(i)-mx);if(d<bestD){bestD=d;best=i;}}
+  if(bestD>cW/n){hideTT();return;}
+  const rows=datasets.map(ds=>[ds.lbl||'',ds.yf?ds.yf(ds.data[best]):ttFmt(ds.data[best]*1e5)]);
+  showTT(e,labels[best],rows);
+}
+
+function drawStacked(id,labels,datasets,opts={}){
+  const H=opts.H||200;const r=setupCanvas(id,H);if(!r)return;
+  const{ctx,W}=r;const pad={l:56,r:14,t:12,b:28};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b,n=labels.length;
+  const maxV=opts.maxV||Math.max(...labels.map((_,i)=>datasets.reduce((s,d)=>s+(d.data[i]||0),0)))*1.05||1;
+  const bW=(cW/n)*0.72,gap=cW/n;
+  fillBg(ctx,W,H);
+  [0,.25,.5,.75,1].forEach(f=>{
+    const v=maxV*f,y=pad.t+cH*(1-f);
+    ctx.strokeStyle='#e2e8f0';ctx.lineWidth=.6;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(opts.yf?opts.yf(v):smartYFmt(v,maxV,0),pad.l-4,y+3);
+  });
+  const barData=[];
+  labels.forEach((lbl,i)=>{
+    let yBot=pad.t+cH;const cols=[];
+    datasets.forEach(ds=>{
+      const v=ds.data[i]||0;const h=(v/maxV)*cH;
+      const x=pad.l+i*gap+(gap-bW)/2;
+      if(h>0){ctx.fillStyle=ds.c;ctx.beginPath();ctx.roundRect(x,yBot-h,bW,h,[2,2,0,0]);ctx.fill();}
+      cols.push({lbl:ds.lbl||ds.c,v,c:ds.c});yBot-=h;
+    });
+    barData.push({lbl,x:pad.l+i*gap+gap/2,cols});
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(lbl,pad.l+i*gap+gap/2,H-pad.b+15);
+  });
+  chartMeta[id]={type:'stacked',barData,gap,pad};
+  const c=document.getElementById(id);c.onmousemove=e=>stackedHover(e,id);c.onmouseleave=hideTT;
+}
+
+function stackedHover(e,id){
+  const m=chartMeta[id];if(!m)return;
+  const c=document.getElementById(id);const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*c.offsetWidth/rect.width;
+  let best=null,bestD=Infinity;
+  m.barData.forEach(b=>{const d=Math.abs(b.x-mx);if(d<bestD){bestD=d;best=b;}});
+  if(!best||bestD>m.gap*0.8){hideTT();return;}
+  const rows=best.cols.filter(x=>x.v>0).map(x=>[x.lbl,ttFmt(x.v)]);
+  const tot=best.cols.reduce((s,x)=>s+x.v,0);rows.push(['Total',ttFmt(tot)]);
+  showTT(e,best.lbl,rows);
+}
+
+function drawBar(id,labels,values,colors,opts={}){
+  const H=opts.H||180;const r=setupCanvas(id,H);if(!r)return;
+  const{ctx,W}=r;const pad={l:56,r:14,t:12,b:28};
+  const cW=W-pad.l-pad.r,cH=H-pad.t-pad.b,n=labels.length;
+  const hasNeg=values.some(v=>v<0);
+  const absMax=Math.max(...values.map(Math.abs),1)*1.1;
+  const minV=hasNeg?-absMax:0;const maxV=absMax;
+  const sY=v=>pad.t+cH*(1-(v-minV)/(maxV-minV));const zero=sY(0);
+  const bW=(cW/n)*0.65,gap=cW/n;
+  fillBg(ctx,W,H);
+  for(let i=0;i<=5;i++){
+    const v=minV+(maxV-minV)*(i/5);const y=sY(v);
+    ctx.strokeStyle=Math.abs(v)<maxV*0.01?'#cbd5e1':'#e2e8f0';
+    ctx.lineWidth=Math.abs(v)<maxV*0.01?1:.6;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='right';
+    ctx.fillText(opts.yf?opts.yf(v):smartYFmt(v,maxV,minV),pad.l-4,y+3);
+  }
+  const barData=[];
+  values.forEach((v,i)=>{
+    const x=pad.l+i*gap+(gap-bW)/2;
+    const y1=sY(v),barH=Math.abs(y1-zero);
+    const col=Array.isArray(colors)?colors[i]:colors;
+    ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(x,Math.min(zero,y1),bW,Math.max(barH,1),[2,2,0,0]);ctx.fill();
+    ctx.fillStyle='#94a3b8';ctx.font='9px DM Mono,monospace';ctx.textAlign='center';
+    ctx.fillText(labels[i],pad.l+i*gap+gap/2,H-pad.b+15);
+    barData.push({lbl:labels[i],v,x:pad.l+i*gap+gap/2});
+  });
+  chartMeta[id]={type:'bar',barData,gap,pad,opts};
+  const c=document.getElementById(id);c.onmousemove=e=>barHover(e,id);c.onmouseleave=hideTT;
+}
+
+function barHover(e,id){
+  const m=chartMeta[id];if(!m)return;
+  const c=document.getElementById(id);const rect=c.getBoundingClientRect();
+  const mx=(e.clientX-rect.left)*c.offsetWidth/rect.width;
+  let best=null,bestD=Infinity;
+  m.barData.forEach(b=>{const d=Math.abs(b.x-mx);if(d<bestD){bestD=d;best=b;}});
+  if(!best||bestD>m.gap*0.8){hideTT();return;}
+  const fv=m.opts?.yf?m.opts.yf(best.v):ttFmt(best.v*1e5);
+  showTT(e,best.lbl,[['Value',fv]]);
+}
+
+function makeBars(id,rows,maxV){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=rows.map(r=>`<div class="bar-row">
+    <div class="bar-name" title="${r.n}">${r.n}</div>
+    <div class="bar-track"><div class="bar-fill" style="width:${maxV?(r.v/maxV*100).toFixed(1):0}%;background:${r.c}"></div></div>
+    <div class="bar-val">${r.lbl}</div></div>`).join('');
+}
+
+// ══ OVERVIEW ══════════════════════════════════════════════════════════
+function renderOverview(){
+  const mos=filtMos(),cos=filtCos();
+  // Sales: use Gs/ net per party per month
+  let s=0,pcs=0;
+  mos.forEach(m=>{cos.forEach(co=>{s+=(D.mth_party[m]||{})[co]||0;});});
+  // Returns from Grs (negative values)
+  const r=mos.reduce((acc,m)=>acc+(D.monthly_returns[m]||0),0);
+  const net=s+r;
+  // COGS static (full year)
+  const allPurch=D.kpi.purch;
+  const allPcs=D.kpi.pcs;
+  const cogsPerPc=D.kpi.cogs_pc;
+  const spreadPerPc=D.kpi.spread_pc;
+  const avgSell=D.kpi.avg_sell;
+  // Purchase filtered by month only
+  const totalPurch=mos.reduce((acc,m)=>acc+(D.monthly_purch[m]||0),0);
+  const mg=net-totalPurch;
+  const retPct=s?Math.abs(r/s*100).toFixed(2):0;
+  const mgPct=net?(mg/net*100).toFixed(1):0;
+  const peakM=D.months.reduce((a,m)=>D.monthly_net[m]>D.monthly_net[a]?m:a,D.months[0]);
+  document.getElementById('ov-ins').innerHTML=
+    `Peak month: <strong>${peakM}</strong> (₹${fL(D.monthly_net[peakM])}L). Return rate <strong>${retPct}%</strong>. Gross margin: <strong style="color:${mg>=0?'var(--green)':'var(--red)'}">${mgPct}%</strong>. Reliance leads with <strong>${((D.party_totals.Reliance||0)/s*100).toFixed(1)}%</strong> share.`;
+  document.getElementById('ov-kpi1').innerHTML=[
+    kpi('Gross Sales',fmt(s),'Gs/ invoices',null,'var(--green)'),
+    kpi('Net Sales',fmt(net),'after returns & adj',null,'var(--cyan)'),
+    kpi('Returns',fmt(r),retPct+'% of gross',{c:'badge-dn',t:'↓'+retPct+'%'},'var(--red)'),
+    kpi('Total Pcs',num(D.kpi.pcs),'dispatched FY full',null,'var(--amber)'),
+    kpi('Gross Margin',fmt(mg),mgPct+'% indicative',{c:mg>=0?'badge-up':'badge-dn',t:mgPct+'%'},mg>=0?'var(--green)':'var(--red)'),
+  ].join('');
+  document.getElementById('ov-kpi2').innerHTML=[
+    kpi('Total Purchase',fmt(totalPurch),'8 sheets',null,'var(--purple)'),
+    kpi('Avg Sell ₹/Pc','₹'+num(avgSell),'gross ÷ pcs',null,'var(--blue)'),
+    kpi('COGS (Static)','₹'+num(cogsPerPc),'full yr cost ÷ pcs',null,'var(--amber)'),
+    kpi('Spread/Pc','₹'+num(spreadPerPc),'net margin ÷ pcs',{c:'badge-up',t:'▲'},'var(--cyan)'),
+  ].join('');
+
+  document.getElementById('ov-sleg').innerHTML=cos.map(co=>`<div class="sl-item"><div class="sl-dot" style="background:${CC[co]}"></div>${co}</div>`).join('');
+  drawStacked('c-ov-stack',mos,
+    cos.map(co=>({c:CC[co],lbl:co,data:mos.map(m=>(D.mth_party[m]||{})[co]||0)})));
+
+  const cSlices=cos.map(co=>({n:co,v:mos.reduce((acc,m)=>acc+((D.mth_party[m]||{})[co]||0),0),c:CC[co]})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const cTot=cSlices.reduce((acc,x)=>acc+x.v,0);
+  drawSVGDonut('svg-ov-donut',cSlices.map(x=>({v:x.v,c:x.c})),70,70,60,32);
+  document.getElementById('ov-dleg').innerHTML=cSlices.map(x=>`<div class="leg-row"><div class="leg-dot" style="background:${x.c}"></div><div class="leg-lbl">${x.n}</div><div class="leg-val">${(x.v/cTot*100).toFixed(1)}%</div></div>`).join('');
+
+  drawLine('c-ov-margin',mos,[
+    {data:mos.map(m=>(D.monthly_net[m]||0)/1e5),c:'#059669',fill:'rgba(5,150,105,.08)',lbl:'Net Sales (L)',w:2},
+    {data:mos.map(m=>(D.monthly_purch[m]||0)/1e5),c:'#dc2626',fill:'rgba(220,38,38,.06)',lbl:'Purchase (L)',w:1.5},
+    {data:mos.map(m=>(D.monthly_margin[m]||0)/1e5),c:'#2563eb',fill:'rgba(37,99,235,.06)',lbl:'Margin (L)',w:2},
+  ],{minV:Math.min(...mos.map(m=>(D.monthly_margin[m]||0)/1e5))*1.2});
+
+  const retBars=cos.map(co=>{
+    const s2=mos.reduce((a,m)=>a+((D.mth_party[m]||{})[co]||0),0);
+    const rr=Math.abs(D.party_returns[co]||0)*mos.length/12;
+    return{n:co,v:s2?rr/s2*100:0,c:CC[co],lbl:s2?(rr/s2*100).toFixed(2)+'%':'—'};
+  }).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  makeBars('ov-ret',retBars,Math.max(...retBars.map(x=>x.v))||1);
+}
+
+// ══ SALES ════════════════════════════════════════════════════════════
+function renderSales(){
+  const mos=filtMos(),cos=filtCos();
+  let s=0;mos.forEach(m=>{cos.forEach(co=>{s+=(D.mth_party[m]||{})[co]||0;});});
+  const gs_cnt=8687;const ret_cnt=1064;
+  const peakM=mos.reduce((a,m)=>D.monthly_net[m]>D.monthly_net[a]?m:a,mos[0]||'Sep');
+  const lowM=mos.reduce((a,m)=>D.monthly_net[m]<D.monthly_net[a]?m:a,mos[0]||'Oct');
+  document.getElementById('sd-ins').innerHTML=`Gross invoiced: <strong>${fmt(s)}</strong> over <strong>${mos.length}</strong> months. Avg ₹/pc: <strong>₹${num(D.kpi.avg_sell)}</strong>. Peak: <strong>${peakM}</strong> (₹${fL(D.monthly_net[peakM]||0)}L). Lowest: <strong>${lowM}</strong>.`;
+  document.getElementById('sd-kpi').innerHTML=[
+    kpi('Gross Sales',fmt(s),mos.length+' months',null,'var(--green)'),
+    kpi('Gs/ Transactions',num(gs_cnt),'invoices',null,'var(--cyan)'),
+    kpi('Return Transactions',num(ret_cnt),'Grs/ entries',null,'var(--red)'),
+    kpi('Total Pcs',num(D.kpi.pcs),'Gs/ only',null,'var(--amber)'),
+  ].join('');
+  drawLine('c-sd-line',mos,[
+    {data:mos.map(m=>cos.reduce((acc,co)=>acc+((D.mth_party[m]||{})[co]||0),0)/1e5),c:'#059669',fill:'rgba(5,150,105,.09)',lbl:'Gross Sales (L)',w:2.5}
+  ]);
+
+  const tot=cos.reduce((acc,co)=>acc+mos.reduce((a,m)=>a+((D.mth_party[m]||{})[co]||0),0),0);
+  document.getElementById('sd-tbody').innerHTML=cos.map(co=>{
+    const sv=mos.reduce((a,m)=>a+((D.mth_party[m]||{})[co]||0),0);
+    const rv=Math.abs(D.party_returns[co]||0);
+    const pv=D.party_pcs[co]||0;
+    const dn=D.party_dn1[co]||0,cn=D.party_cn1[co]||0;
+    const nv=sv-rv+dn-cn;
+    const rp=sv?(rv/sv*100).toFixed(2):0;
+    if(!sv)return '';
+    return `<tr><td><span style="color:${CC[co]}">●</span> ${co}</td>
+      <td class="num">₹${num(sv)}</td><td class="num td-r">₹${num(rv)}</td>
+      <td class="num td-y">₹${num(dn)}</td><td class="num" style="color:var(--muted)">₹${num(cn)}</td>
+      <td class="num td-g">₹${num(nv)}</td><td class="num">${num(pv)}</td>
+      <td class="num ${+rp>3?'td-r':+rp>1?'td-y':'td-g'}">${rp}%</td>
+      <td class="num">₹${num(pv?Math.round(sv/pv):0)}</td>
+      <td class="num">${tot?(sv/tot*100).toFixed(1):0}%</td></tr>`;
+  }).join('')+`<tr style="border-top:2px solid var(--border);font-weight:700"><td>TOTAL</td><td class="num">₹${num(tot)}</td><td colspan="8"></td></tr>`;
+
+  const allV=[];cos.forEach(co=>D.months.forEach(m=>allV.push((D.mth_party[m]||{})[co]||0)));
+  const hmMax=Math.max(...allV)||1;
+  let h=`<thead><tr><th style="background:#f5f6fb;color:#6b7394;font-size:10px;padding:5px 10px;font-family:'DM Mono',monospace;min-width:110px">Customer</th>`;
+  D.months.forEach(m=>h+=`<th style="background:#f5f6fb;color:#6b7394;font-size:9px;padding:5px 8px;font-family:'DM Mono',monospace;text-align:center">${m}</th>`);
+  h+=`</tr></thead><tbody>`;
+  cos.filter(co=>D.party_totals[co]>0).forEach(co=>{
+    h+=`<tr><td style="color:${CC[co]};font-size:11px;padding:5px 10px;font-family:'DM Mono',monospace">● ${co}</td>`;
+    D.months.forEach(m=>{
+      const v=(D.mth_party[m]||{})[co]||0,intt=v/hmMax;
+      const bg=v>0?`rgba(37,99,235,${Math.max(.05,intt*.55)})`:'transparent';
+      const fc=intt>.5?'#ffffff':intt>.15?'#1e3a8a':'#94a3b8';
+      h+=`<td style="background:${bg};color:${fc};font-size:9px;padding:4px 8px;text-align:center;font-family:'DM Mono',monospace;border-radius:3px">${v>0?(v/1e5).toFixed(1):''}${v>0?'L':''}</td>`;
+    });h+=`</tr>`;
+  });
+  document.getElementById('sd-heatmap').innerHTML=h+'</tbody>';
+}
+
+// ══ RETURNS ══════════════════════════════════════════════════════════
+function renderReturns(){
+  const mos=filtMos(),cos=filtCos();
+  const totS=cos.reduce((acc,co)=>acc+mos.reduce((a,m)=>a+((D.mth_party[m]||{})[co]||0),0),0);
+  const totR=Math.abs(mos.reduce((acc,m)=>acc+(D.monthly_returns[m]||0),0));
+  const rPct=totS?(totR/totS*100).toFixed(2):0;
+  const totDn=Object.values(D.party_dn1).reduce((s,v)=>s+v,0);
+  const totCn=Object.values(D.party_cn1).reduce((s,v)=>s+v,0);
+  const topRet=Object.entries(D.party_returns).sort((a,b)=>a[1]-b[1])[0];
+  document.getElementById('rt-ins').innerHTML=`Returns (GRS): <strong>${ttFmt(totR)}</strong> (${rPct}% of gross). ${topRet?`<strong>${topRet[0]}</strong> highest absolute returns (${ttFmt(Math.abs(topRet[1]))}).`:''} Dn1: ${ttFmt(totDn)} · Cn1: ${ttFmt(totCn)}.`;
+  const retPcs=Math.abs(Math.round(D.kpi.returns/D.kpi.avg_sell));
+  document.getElementById('rt-kpi').innerHTML=[
+    kpi('Gross Sales',fmt(totS),mos.length+' months',null,'var(--green)'),
+    kpi('Total Returns (GRS)',ttFmt(totR),rPct+'% of gross',{c:'badge-dn',t:'↓'+rPct+'%'},'var(--red)'),
+    kpi('Estimated Return Pcs',num(retPcs)+'pcs','1,064 Grs/ txns',null,'var(--amber)'),
+  ].join('');
+  const moL=mos;
+  drawLine('c-rt-trend',moL,[
+    {data:mos.map(m=>cos.reduce((acc,co)=>acc+((D.mth_party[m]||{})[co]||0),0)/1e5),c:'#059669',fill:'rgba(5,150,105,.07)',lbl:'Gross Sales (L)',w:2},
+    {data:mos.map(m=>Math.abs(D.monthly_returns[m]||0)/1e5),c:'#dc2626',fill:'rgba(220,38,38,.08)',lbl:'Returns (L)',w:2},
+  ],{H:200});
+
+  const pctD=mos.map(m=>{
+    const r=Math.abs(D.monthly_returns[m]||0);
+    const s=cos.reduce((acc,co)=>acc+((D.mth_party[m]||{})[co]||0),0);
+    return s?+(r/s*100).toFixed(2):0;
+  });
+  drawBar('c-rt-pct',moL,pctD,pctD.map(v=>v>3?'#dc2626':v>1?'#d97706':'#059669'),{H:200,yf:v=>v.toFixed(1)+'%'});
+
+  const rBars=cos.map(co=>{const rv=Math.abs(D.party_returns[co]||0);return{n:co,v:rv,c:CC[co],lbl:ttFmt(rv)};}).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  makeBars('rt-co-bars',rBars,rBars[0]?.v||1);
+
+  document.getElementById('dn1-tbody').innerHTML=cos.filter(co=>D.party_dn1[co]>0).sort((a,b)=>(D.party_dn1[b]||0)-(D.party_dn1[a]||0)).map(co=>`<tr><td><span style="color:${CC[co]}">●</span> ${co}</td><td class="num td-y">${ttFmt(D.party_dn1[co])}</td></tr>`).join('')||`<tr><td colspan="2" style="color:var(--muted);text-align:center;padding:16px">No Dn1 entries</td></tr>`;
+  document.getElementById('cn1-tbody').innerHTML=cos.filter(co=>D.party_cn1[co]>0).sort((a,b)=>(D.party_cn1[b]||0)-(D.party_cn1[a]||0)).map(co=>`<tr><td><span style="color:${CC[co]}">●</span> ${co}</td><td class="num" style="color:var(--muted)">${ttFmt(D.party_cn1[co])}</td></tr>`).join('')||`<tr><td colspan="2" style="color:var(--muted);text-align:center;padding:16px">No Cn1 entries</td></tr>`;
+
+  const netD=mos.map(m=>{
+    const s=cos.reduce((acc,co)=>acc+((D.mth_party[m]||{})[co]||0),0);
+    const r=D.monthly_returns[m]||0;
+    return(s+r)/1e5;
+  });
+  drawBar('c-rt-net',moL,netD,netD.map(v=>v<0?'#dc2626':'#2563eb'),{H:150,yf:v=>{const a=Math.abs(v*1e5);if(a<1e5)return(v*1e5/1000).toFixed(1)+'K';return v.toFixed(1)+'L';}});
+}
+
+// ══ OPERATIONS ═══════════════════════════════════════════════════════
+function renderOps(){
+  const mos=filtMos();
+  const tP=mos.reduce((s,m)=>s+(D.monthly_ops[m]?.inv||0),0);
+  const tG=mos.reduce((s,m)=>s+(D.monthly_ops[m]?.grn||0),0);
+  const tSh=mos.reduce((s,m)=>s+(D.monthly_ops[m]?.short||0),0);
+  const shPct=tP?(tSh/tP*100).toFixed(2):0;
+  const peakM=D.months.reduce((a,m)=>(D.monthly_ops[m]?.inv||0)>(D.monthly_ops[a]?.inv||0)?m:a,D.months[0]);
+  document.getElementById('op-ins').innerHTML=`Combined Bill Wise data — all eligible sheets. Total dispatched: <strong>${num(tP)} pcs</strong>. Short: <strong>${num(tSh)} pcs</strong> (${shPct}%). Peak dispatch: <strong>${peakM}</strong> (${num(D.monthly_ops[peakM]?.inv||0)} pcs).`;
+  const stAmt=D.cat_display_totals['Stitching Charges']||0;
+  document.getElementById('op-kpi').innerHTML=[
+    kpi('Dispatched (Bill)',num(tP)+' pcs','Combined sheets',null,'var(--green)'),
+    kpi("GRN'd Pcs",num(tG)+' pcs','received',null,'var(--cyan)'),
+    kpi('Short Pcs',num(tSh)+' pcs',shPct+'%',{c:+shPct>0.5?'badge-dn':'badge-up',t:shPct+'%'},'var(--amber)'),
+    kpi('Stitching Charges',fmt(stAmt),'full year purchase',null,'var(--purple)'),
+  ].join('');
+
+  document.getElementById('op-stbl').innerHTML=Object.entries(D.stitcher_data).sort((a,b)=>b[1].amt-a[1].amt).map(([n,d])=>{
+    const sp=d.pcs?(d.short/d.pcs*100).toFixed(2):0;
+    const rat=+sp===0?`<span class="tag tg">★ Perfect</span>`:+sp<0.3?`<span class="tag tg">✓ Good</span>`:+sp<0.6?`<span class="tag ty">⚠ Watch</span>`:`<span class="tag tr">✗ Alert</span>`;
+    return `<tr><td style="font-weight:700">${n}</td>
+      <td class="num">₹${num(d.amt)}</td>
+      <td class="num">${d.bills}</td>
+      <td class="num"><span class="tag tu">PCS</span> ${num(d.pcs)}</td>
+      <td class="num">${num(d.pcs)}</td>
+      <td class="num">${num(d.grn)}</td>
+      <td class="num ${d.short>0?'td-y':''}">${num(d.short)}</td>
+      <td class="num ${+sp>0.5?'td-r':+sp>0.2?'td-y':'td-g'}">${sp}%</td>
+      <td class="num">₹${num(d.pcs?Math.round(d.amt/d.pcs):0)}</td>
+      <td>${rat}</td></tr>`;
+  }).join('');
+
+  const svParts=D.cat_party['Stitching Charges']||[];
+  const svBars=svParts.filter(x=>x.n>0).slice(0,14).map(x=>({n:x.p.length>18?x.p.slice(0,18)+'…':x.p,v:x.n,c:'#2563eb',lbl:ttFmt(x.n)}));
+  makeBars('op-sv-bars',svBars,svBars[0]?.v||1);
+  const spBars=Object.entries(D.stitcher_data).map(([n,d])=>{const sp=d.pcs?d.short/d.pcs*100:0;return{n:n.length>15?n.slice(0,15)+'…':n,v:sp,c:sp>0.5?'#dc2626':sp>0.2?'#d97706':'#059669',lbl:sp.toFixed(2)+'%'};}).sort((a,b)=>b.v-a.v);
+  makeBars('op-sp-bars',spBars,Math.max(...spBars.map(x=>x.v),.1));
+
+  drawLine('c-op-disp',D.months,[
+    {data:D.months.map(m=>D.monthly_ops[m]?.inv||0),c:'#2563eb',fill:'rgba(37,99,235,.08)',lbl:'Dispatched',w:2,yf:v=>num(v)},
+    {data:D.months.map(m=>D.monthly_ops[m]?.grn||0),c:'#059669',fill:'rgba(5,150,105,.07)',lbl:"GRN'd",w:2,yf:v=>num(v)},
+  ],{H:180,yf:v=>num(v)});
+}
+
+// ══ PURCHASE ══════════════════════════════════════════════════════════
+function renderPurchase(){
+  const mos=filtMos();
+  const cats=Object.keys(CATC).filter(c=>c!=='Interunit Purchase');
+  const catTots=cats.map(c=>({c,v:(D.cat_display_totals[c]||0)}));
+  const totP=catTots.reduce((s,x)=>s+x.v,0);
+  const totS=(()=>{let s=0,r=0;mos.forEach(m=>{filtCos().forEach(co=>{s+=(D.mth_party[m]||{})[co]||0;});r+=D.monthly_returns[m]||0;});return s+r;})();
+  const totMg=totS-totP;
+  const mgPct=totS?(totMg/totS*100).toFixed(1):0;
+  const negMos=mos.filter(m=>D.monthly_margin[m]<0);
+  const stAmt=D.cat_display_totals['Stitching Charges']||0;
+  const stPct=D.kpi.purch?(stAmt/D.kpi.purch*100).toFixed(1):0;
+  const greyAmt=D.cat_display_totals['Grey Fabric']||0;
+  const greyPct=D.kpi.purch?(greyAmt/D.kpi.purch*100).toFixed(1):0;
+  document.getElementById('pu-ins').innerHTML=`Total purchase: <strong>₹${fC(totP)} Cr</strong>. Grey Fabric (${ttFmt(greyAmt)}) is <strong>largest</strong> cost. Stitching Charges: ${ttFmt(stAmt)} (${stPct}%). ${negMos.length?`<strong style="color:var(--red)">⚠ Negative margin: ${negMos.join(', ')}</strong>.`:'All filtered months gross-positive.'}`;
+  document.getElementById('pu-kpi1').innerHTML=[
+    kpi('Net Sales',fmt(totS),'filtered period',null,'var(--green)'),
+    kpi('Total Cost',fmt(mos.reduce((acc,m)=>acc+(D.monthly_purch[m]||0),0)),'8 sheets',null,'var(--red)'),
+    kpi('Gross Margin',fmt(totMg),mgPct+'%',{c:totMg>=0?'badge-up':'badge-dn',t:mgPct+'%'},totMg>=0?'var(--green)':'var(--red)'),
+  ].join('');
+  document.getElementById('pu-kpi2').innerHTML=[
+    kpi('Stitching Charges',fmt(stAmt),stPct+'% of purchase',null,'var(--amber)'),
+    kpi('Grey Fabric',fmt(greyAmt),greyPct+'% of purchase',null,'var(--blue)'),
+    kpi('Other Purchase Cost',fmt(D.kpi.other_purch),D.kpi.other_purch_pct+'% of total',null,'var(--purple)'),
+  ].join('');
+
+  document.getElementById('pu-sleg').innerHTML=cats.map(c=>`<div class="sl-item"><div class="sl-dot" style="background:${CATC[c]||'#64748b'}"></div>${c}</div>`).join('');
+  drawStacked('c-pu-stack',mos,cats.map(c=>({c:CATC[c]||'#64748b',lbl:c,data:mos.map(m=>(D.monthly_purch_cat[m]?.[c]||0))})),{H:180});
+
+  const puSl=catTots.filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  drawSVGDonut('svg-pu-donut',puSl.map(x=>({v:x.v,c:CATC[x.c]||'#64748b'})),70,70,60,32);
+  document.getElementById('pu-dleg').innerHTML=puSl.map(x=>`<div class="leg-row"><div class="leg-dot" style="background:${CATC[x.c]||'#64748b'}"></div><div class="leg-lbl">${x.c}</div><div class="leg-val">${totP?(x.v/totP*100).toFixed(1):0}%</div></div>`).join('');
+
+  drawLine('c-pu-margin',mos,[
+    {data:mos.map(m=>(D.monthly_net[m]||0)/1e5),c:'#059669',fill:'rgba(5,150,105,.07)',lbl:'Net Sales (L)',w:2},
+    {data:mos.map(m=>(D.monthly_purch[m]||0)/1e5),c:'#dc2626',fill:'rgba(220,38,38,.06)',lbl:'Purchase (L)',w:1.5},
+    {data:mos.map(m=>(D.monthly_margin[m]||0)/1e5),c:'#2563eb',fill:'rgba(37,99,235,.06)',lbl:'Margin (L)',w:2},
+  ],{H:200,minV:Math.min(...mos.map(m=>(D.monthly_margin[m]||0)/1e5))*1.2});
+
+  const mpD=mos.map(m=>{const s=D.monthly_net[m]||0,mg=D.monthly_margin[m]||0;return s?+(mg/s*100).toFixed(1):0;});
+  drawBar('c-pu-pct',mos,mpD,mpD.map(v=>v<0?'#dc2626':v<10?'#d97706':'#059669'),{H:150,yf:v=>v.toFixed(0)+'%'});
+
+  const grandTot=catTots.reduce((s,x)=>s+x.v,0);
+  let tblHTML='';
+  catTots.filter(x=>x.v!==0).sort((a,b)=>b.v-a.v).forEach(({c,v:tot})=>{
+    const sh=grandTot?(tot/grandTot*100).toFixed(1):0;
+    const parts=D.cat_party[c]||[];
+    const hasChildren=parts.length>0;
+    const cid='cat-'+c.replace(/\W+/g,'_');
+    const unitSample=parts[0]?.u||'—';
+    const unitTag=unitSample==='Mtr'?`<span class="tag" style="background:#dbeafe;color:#1d4ed8">${unitSample}</span>`:unitSample==='PCS'?`<span class="tag tg">${unitSample}</span>`:`<span class="tag ty">${unitSample}</span>`;
+    const moCells=D.months.map(m=>{const mv=D.monthly_purch_cat[m]?.[c]||0;return `<td class="num" style="font-size:10px;color:${mv>5e6?'var(--text)':'var(--muted)'}">${mv>0?(mv/1e5).toFixed(1)+'L':'—'}</td>`;}).join('');
+    tblHTML+=`<tr class="cat-row${hasChildren?' expandable':''}" data-cid="${cid}" onclick="${hasChildren?`toggleCat('${cid}',this)`:''}">
+      <td style="display:flex;align-items:center">
+        ${hasChildren?`<span class="cat-toggle">▶</span>`:`<span style="width:22px;display:inline-block"></span>`}
+        <span style="width:7px;height:7px;border-radius:2px;display:inline-block;background:${CATC[c]||'#64748b'};margin-right:6px"></span>${c}
+        ${hasChildren?`<span style="font-size:9px;color:var(--muted);margin-left:6px;font-family:'DM Mono',monospace">(${parts.length})</span>`:''}
+      </td>
+      <td>${unitTag}</td>
+      <td class="num">₹${num(tot)}</td><td class="num">${sh}%</td>${moCells}</tr>`;
+    if(hasChildren){
+      parts.filter(p=>p.n!==0).forEach(p=>{
+        const pSh=tot?(p.n/tot*100).toFixed(1):0;
+        tblHTML+=`<tr class="part-row" data-parent="${cid}">
+          <td>↳ ${p.p}</td>
+          <td><span style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace">${p.u}</span></td>
+          <td class="num">₹${num(p.n)}</td>
+          <td class="num">${pSh}%</td>
+          ${D.months.map(()=>`<td></td>`).join('')}
+        </tr>`;
+      });
+    }
+  });
+  tblHTML+=`<tr style="border-top:2px solid var(--border);font-weight:700"><td style="padding-left:12px">TOTAL</td><td></td><td class="num">₹${num(grandTot)}</td><td></td>${D.months.map(m=>`<td class="num">${(D.monthly_purch[m]||0)>0?(D.monthly_purch[m]/1e5).toFixed(1)+'L':'—'}</td>`).join('')}</tr>`;
+  document.getElementById('pu-ctbl').innerHTML=tblHTML;
+}
+
+function toggleCat(cid,rowEl){
+  const isOpen=rowEl.classList.toggle('open');
+  document.querySelectorAll(`.part-row[data-parent="${cid}"]`).forEach(r=>{
+    r.classList.toggle('visible',isOpen);
+  });
+}
+
+function switchTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>renderAll()));
+}
+function renderAll(){
+  const id=document.querySelector('.page.active')?.id;
+  if(id==='page-overview') renderOverview();
+  else if(id==='page-sales') renderSales();
+  else if(id==='page-returns') renderReturns();
+  else if(id==='page-ops') renderOps();
+  else if(id==='page-purchase') renderPurchase();
+}
+window.addEventListener('resize',()=>setTimeout(renderAll,80));
+document.addEventListener('mousemove',e=>{if(TT.classList.contains('show'))moveTT(e);});
+renderOverview();
+</script>
+</body>
+</html>
